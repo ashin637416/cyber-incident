@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block title %}Case {{ incident.case_id }}{% endblock %}
+{% block page_title %}Case Details{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Main Column -->
+    <div class="col-lg-8">
+        <!-- Case Header Card -->
+        <div class="glass-card mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                <div>
+                    <span class="case-id" style="font-size:1.3rem">{{ incident.case_id }}</span>
+                    <h4 class="mt-2 mb-1">{{ incident.title }}</h4>
+                    <p class="text-cyber-muted mb-0">
+                        <i class="bi bi-tag me-1"></i>{{ incident.incident_type }}
+                        {% if incident.category_name %}
+                        · <i class="bi bi-bookmark me-1"></i>{{ incident.category_name }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="text-end">
+                    <span class="badge-cyber badge-{{ incident.status|lower|replace(' ', '-') }} mb-2 d-inline-block">
+                        {{ incident.status }}
+                    </span>
+                    <br>
+                    <span class="badge-cyber badge-{{ incident.priority }}">
+                        {{ incident.priority|capitalize }} Priority
+                    </span>
+                </div>
+            </div>
+
+            <!-- Status Progress Bar -->
+            <div class="status-progress">
+                {% for s in statuses %}
+                {% set idx = statuses.index(s) %}
+                {% set current_idx = statuses.index(incident.status) %}
+                <div class="progress-step {{ 'completed' if idx < current_idx else ('current' if idx == current_idx else '') }}"></div>
+                {% endfor %}
+            </div>
+            <div class="status-labels">
+                {% for s in statuses %}
+                {% set current_idx = statuses.index(incident.status) %}
+                <span class="{{ 'active-label' if s == incident.status }}">{{ s }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Incident Details -->
+        <div class="glass-card mb-4">
+            <h5 class="section-title"><i class="bi bi-info-circle"></i> Description</h5>
+            <p>{{ incident.description }}</p>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <small class="text-cyber-muted d-block">Date & Time</small>
+                    <strong>{{ incident.incident_date }} {{ incident.incident_time or '' }}</strong>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-cyber-muted d-block">Location</small>
+                    <strong>{{ incident.location or 'N/A' }}</strong>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-cyber-muted d-block">Financial Loss</small>
+                    <strong>₹{{ "%.2f"|format(incident.financial_loss or 0) }}</strong>
+                </div>
+            </div>
+
+            {% if incident.website_involved or incident.email_involved or incident.phone_involved or incident.social_media %}
+            <hr class="divider">
+            <h6 class="text-accent mb-3">Involved Details</h6>
+            <div class="row g-3">
+                {% if incident.website_involved %}
+                <div class="col-md-6">
+                    <small class="text-cyber-muted d-block"><i class="bi bi-globe me-1"></i>Website</small>
+                    <strong>{{ incident.website_involved }}</strong>
+                </div>
+                {% endif %}
+                {% if incident.email_involved %}
+                <div class="col-md-6">
+                    <small class="text-cyber-muted d-block"><i class="bi bi-envelope me-1"></i>Email</small>
+                    <strong>{{ incident.email_involved }}</strong>
+                </div>
+                {% endif %}
+                {% if incident.phone_involved %}
+                <div class="col-md-6">
+                    <small class="text-cyber-muted d-block"><i class="bi bi-telephone me-1"></i>Phone</small>
+                    <strong>{{ incident.phone_involved }}</strong>
+                </div>
+                {% endif %}
+                {% if incident.social_media %}
+                <div class="col-md-6">
+                    <small class="text-cyber-muted d-block"><i class="bi bi-share me-1"></i>Social Media</small>
+                    <strong>{{ incident.social_media }}</strong>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if incident.additional_comments %}
+            <hr class="divider">
+            <h6 class="text-accent mb-2">Additional Comments</h6>
+            <p>{{ incident.additional_comments }}</p>
+            {% endif %}
+
+            {% if incident.resolution_remarks %}
+            <hr class="divider">
+            <h6 class="text-accent mb-2">Resolution Remarks</h6>
+            <p class="mb-0">{{ incident.resolution_remarks }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Evidence -->
+        <div class="glass-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="section-title mb-0"><i class="bi bi-paperclip"></i> Evidence</h5>
+            </div>
+
+            {% if evidence_list %}
+            <div class="evidence-grid">
+                {% for ev in evidence_list %}
+                <div class="evidence-item">
+                    <div class="evidence-preview">
+                        {% if ev.file_type == 'image' %}
+                        <img src="{{ url_for('static', filename='../'+ev.file_path) }}" alt="{{ ev.original_name }}"
+                             onerror="this.parentElement.innerHTML='<i class=\'bi bi-file-image\'></i>'">
+                        {% elif ev.file_type == 'video' %}
+                        <i class="bi bi-file-play"></i>
+                        {% else %}
+                        <i class="bi bi-file-earmark-text"></i>
+                        {% endif %}
+                    </div>
+                    <div class="evidence-info">
+                        <div class="evidence-name" title="{{ ev.original_name }}">{{ ev.original_name }}</div>
+                        <div class="evidence-size">{{ "%.1f"|format(ev.file_size / 1024) }} KB</div>
+                        <div class="mt-2 d-flex gap-1">
+                            <a href="{{ url_for('evidence.download_evidence', evidence_id=ev.id) }}"
+                               class="btn btn-outline-cyber btn-sm" title="Download">
+                                <i class="bi bi-download"></i>
+                            </a>
+                            {% if current_user.role in ('officer', 'admin') %}
+                            <form method="POST" action="{{ url_for('evidence.delete_evidence', evidence_id=ev.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm" style="border:1px solid var(--danger);color:var(--danger)"
+                                        data-confirm="Delete this evidence file?">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        {% if ev.notes %}
+                        <div class="mt-2" style="font-size:0.78rem;color:var(--text-muted)">
+                            <i class="bi bi-chat-left-text me-1"></i>{{ ev.notes }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-cyber-muted">No evidence files uploaded.</p>
+            {% endif %}
+
+            <!-- Upload more evidence -->
+            {% if current_user.id == incident.user_id or current_user.role in ('officer', 'admin') %}
+            <hr class="divider">
+            <form method="POST" action="{{ url_for('evidence.upload_evidence', incident_id=incident.id) }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="upload-zone" style="padding:20px">
+                    <i class="bi bi-cloud-arrow-up upload-icon d-block"></i>
+                    <div class="upload-text">Upload additional evidence</div>
+                    <input type="file" id="evidenceFiles" name="evidence_files" multiple class="d-none"
+                           accept=".png,.jpg,.jpeg,.gif,.bmp,.webp,.pdf,.doc,.docx,.txt,.csv,.xlsx,.mp4,.avi,.mkv,.mov,.webm">
+                </div>
+                <div class="file-preview"></div>
+                <button type="submit" class="btn btn-cyber btn-sm mt-2">
+                    <i class="bi bi-upload me-1"></i>Upload Files
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Timeline -->
+        <div class="glass-card mb-4">
+            <h5 class="section-title"><i class="bi bi-clock-history"></i> Status Timeline</h5>
+            {% if timeline %}
+            <div class="timeline">
+                {% for t in timeline %}
+                <div class="timeline-item">
+                    <div class="timeline-date">{{ t.created_at.strftime('%d %b %Y, %I:%M %p') if t.created_at else '' }}</div>
+                    <div class="timeline-content">
+                        <span class="badge-cyber badge-{{ t.new_status|lower|replace(' ', '-') }}">{{ t.new_status }}</span>
+                        {% if t.old_status %}
+                        <span class="text-cyber-muted mx-1">← {{ t.old_status }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="timeline-user">{{ t.changed_by_name }}</div>
+                    {% if t.notes %}
+                    <div class="mt-1" style="font-size:0.82rem">{{ t.notes }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-cyber-muted">No status updates yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="col-lg-4">
+        <!-- Case Info -->
+        <div class="glass-card mb-4">
+            <h5 class="section-title"><i class="bi bi-card-list"></i> Case Info</h5>
+            <div class="mb-3">
+                <small class="text-cyber-muted d-block">Reporter</small>
+                <strong>{{ incident.reporter_name }}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-cyber-muted d-block">Assigned Officer</small>
+                <strong>{{ incident.officer_name or 'Not assigned' }}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-cyber-muted d-block">Submitted</small>
+                <strong>{{ incident.created_at.strftime('%d %b %Y, %I:%M %p') if incident.created_at else '' }}</strong>
+            </div>
+            <div>
+                <small class="text-cyber-muted d-block">Last Updated</small>
+                <strong>{{ incident.updated_at.strftime('%d %b %Y, %I:%M %p') if incident.updated_at else '' }}</strong>
+            </div>
+
+            {% if current_user.role == 'admin' and incident.status == 'Pending' %}
+            <hr class="divider">
+            <a href="{{ url_for('admin.assign_case', incident_id=incident.id) }}" class="btn btn-cyber w-100">
+                <i class="bi bi-person-plus me-1"></i>Assign Officer
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Officer Actions -->
+        {% if current_user.role in ('officer', 'admin') %}
+        <!-- Update Status -->
+        <div class="glass-card mb-4">
+            <h5 class="section-title"><i class="bi bi-arrow-repeat"></i> Update Status</h5>
+            <form method="POST" action="{{ url_for('officer.update_case_status', incident_id=incident.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <select class="form-select" name="new_status" required>
+                        <option value="">Select status...</option>
+                        {% for s in statuses %}
+                        <option value="{{ s }}" {{ 'selected' if s == incident.status }}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" name="notes" rows="2" placeholder="Status notes..."></textarea>
+                </div>
+                {% if incident.status in ('Under Investigation', 'Assigned') %}
+                <div class="mb-3">
+                    <textarea class="form-control" name="resolution_remarks" rows="2"
+                              placeholder="Resolution remarks (for resolving)..."></textarea>
+                </div>
+                {% endif %}
+                <button type="submit" class="btn btn-cyber w-100 btn-sm">
+                    <i class="bi bi-check-circle me-1"></i>Update Status
+                </button>
+            </form>
+        </div>
+
+        <!-- Change Priority -->
+        <div class="glass-card mb-4">
+            <h5 class="section-title"><i class="bi bi-flag"></i> Change Priority</h5>
+            <form method="POST" action="{{ url_for('officer.change_priority', incident_id=incident.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <select class="form-select" name="priority">
+                        <option value="low" {{ 'selected' if incident.priority == 'low' }}>Low</option>
+                        <option value="medium" {{ 'selected' if incident.priority == 'medium' }}>Medium</option>
+                        <option value="high" {{ 'selected' if incident.priority == 'high' }}>High</option>
+                        <option value="critical" {{ 'selected' if incident.priority == 'critical' }}>Critical</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-outline-cyber w-100 btn-sm">Update Priority</button>
+            </form>
+        </div>
+
+        <!-- Add Investigation Notes -->
+        <div class="glass-card mb-4">
+            <h5 class="section-title"><i class="bi bi-journal-text"></i> Add Note</h5>
+            <form method="POST" action="{{ url_for('officer.add_case_notes', incident_id=incident.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <textarea class="form-control" name="note" rows="3" placeholder="Investigation notes..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-outline-cyber w-100 btn-sm">Add Note</button>
+            </form>
+        </div>
+
+        <!-- Request Evidence -->
+        <div class="glass-card mb-4">
+            <h5 class="section-title"><i class="bi bi-envelope-plus"></i> Request Evidence</h5>
+            <form method="POST" action="{{ url_for('officer.request_evidence', incident_id=incident.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <textarea class="form-control" name="message" rows="2"
+                              placeholder="Message to the reporter..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-outline-cyber w-100 btn-sm">Send Request</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Investigation Notes List -->
+        {% if notes %}
+        <div class="glass-card">
+            <h5 class="section-title"><i class="bi bi-chat-dots"></i> Investigation Notes</h5>
+            {% for n in notes %}
+            <div class="p-2 mb-2" style="background:var(--bg-glass);border-radius:var(--radius-sm);border:1px solid var(--border-color)">
+                <div class="d-flex justify-content-between">
+                    <small class="text-accent fw-bold">{{ n.officer_name }}</small>
+                    <small class="text-cyber-muted">{{ n.created_at.strftime('%d %b, %I:%M %p') if n.created_at else '' }}</small>
+                </div>
+                <p class="mb-0 mt-1" style="font-size:0.85rem">{{ n.note }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

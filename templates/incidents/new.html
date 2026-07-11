@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Report Incident{% endblock %}
+{% block page_title %}Report a Cyber Incident{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('incident.new_incident') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="row g-4">
+        <!-- Left Column: Incident Details -->
+        <div class="col-lg-8">
+            <div class="glass-card mb-4">
+                <h5 class="section-title"><i class="bi bi-exclamation-triangle"></i> Incident Information</h5>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label for="title" class="form-label">Incident Title *</label>
+                        <input type="text" class="form-control" id="title" name="title"
+                               placeholder="Brief title of the incident" required minlength="5">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="incident_type" class="form-label">Incident Type *</label>
+                        <select class="form-select" id="incident_type" name="incident_type" required>
+                            <option value="">Select type...</option>
+                            <option value="Phishing">Phishing</option>
+                            <option value="Ransomware">Ransomware</option>
+                            <option value="Identity Theft">Identity Theft</option>
+                            <option value="Online Fraud">Online Fraud</option>
+                            <option value="Cyberbullying">Cyberbullying</option>
+                            <option value="Data Breach">Data Breach</option>
+                            <option value="Hacking">Hacking</option>
+                            <option value="Malware">Malware</option>
+                            <option value="Social Engineering">Social Engineering</option>
+                            <option value="Denial of Service">Denial of Service</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id">
+                            <option value="">Select category...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="priority" class="form-label">Priority</label>
+                        <select class="form-select" id="priority" name="priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="description" class="form-label">Detailed Description *</label>
+                        <textarea class="form-control" id="description" name="description"
+                                  rows="4" placeholder="Describe the incident in detail..." required minlength="10"></textarea>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="incident_date" class="form-label">Date of Incident *</label>
+                        <input type="date" class="form-control" id="incident_date" name="incident_date" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="incident_time" class="form-label">Time of Incident</label>
+                        <input type="time" class="form-control" id="incident_time" name="incident_time">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location"
+                               placeholder="City, State or Address">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Involved Parties -->
+            <div class="glass-card mb-4">
+                <h5 class="section-title"><i class="bi bi-link-45deg"></i> Involved Details</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="website_involved" class="form-label">Website / URL Involved</label>
+                        <input type="url" class="form-control" id="website_involved" name="website_involved"
+                               placeholder="https://example.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email_involved" class="form-label">Email Address Involved</label>
+                        <input type="email" class="form-control" id="email_involved" name="email_involved"
+                               placeholder="suspect@example.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="phone_involved" class="form-label">Phone Number Involved</label>
+                        <input type="tel" class="form-control" id="phone_involved" name="phone_involved"
+                               placeholder="+91 98765 43210">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="social_media" class="form-label">Social Media Profile Involved</label>
+                        <input type="text" class="form-control" id="social_media" name="social_media"
+                               placeholder="Profile URL or username">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="financial_loss" class="form-label">Financial Loss (₹)</label>
+                        <input type="number" class="form-control" id="financial_loss" name="financial_loss"
+                               placeholder="0.00" min="0" step="0.01">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Comments -->
+            <div class="glass-card mb-4">
+                <h5 class="section-title"><i class="bi bi-chat-left-text"></i> Additional Comments</h5>
+                <textarea class="form-control" name="additional_comments" rows="3"
+                          placeholder="Any other information that may help the investigation..."></textarea>
+            </div>
+        </div>
+
+        <!-- Right Column: Evidence Upload & Submit -->
+        <div class="col-lg-4">
+            <div class="glass-card mb-4">
+                <h5 class="section-title"><i class="bi bi-cloud-upload"></i> Upload Evidence</h5>
+                <div class="upload-zone">
+                    <i class="bi bi-cloud-arrow-up upload-icon d-block"></i>
+                    <div class="upload-text">Drag & drop files here or click to browse</div>
+                    <div class="upload-hint">Images, PDFs, Documents, Videos (max 16 MB each)</div>
+                    <input type="file" id="evidenceFiles" name="evidence_files" multiple
+                           class="d-none" accept=".png,.jpg,.jpeg,.gif,.bmp,.webp,.pdf,.doc,.docx,.txt,.csv,.xlsx,.mp4,.avi,.mkv,.mov,.webm">
+                </div>
+                <div class="file-preview"></div>
+            </div>
+
+            <div class="glass-card">
+                <h5 class="section-title"><i class="bi bi-send"></i> Submit Report</h5>
+                <p class="text-cyber-muted mb-3" style="font-size:0.85rem">
+                    Once submitted, a unique Case ID will be generated. You can track your case from the dashboard.
+                </p>
+                <button type="submit" class="btn btn-cyber w-100">
+                    <i class="bi bi-shield-check me-2"></i>Submit Incident Report
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

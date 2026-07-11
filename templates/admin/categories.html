@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Manage Categories{% endblock %}
+{% block page_title %}Incident Categories{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Add Category -->
+    <div class="col-lg-4">
+        <div class="glass-card">
+            <h5 class="section-title"><i class="bi bi-plus-circle"></i> Add Category</h5>
+            <form method="POST" action="{{ url_for('admin.manage_categories') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="create">
+                <div class="mb-3">
+                    <label class="form-label">Category Name *</label>
+                    <input type="text" class="form-control" name="name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-cyber w-100">
+                    <i class="bi bi-plus me-1"></i>Add Category
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Categories List -->
+    <div class="col-lg-8">
+        <div class="glass-card">
+            <h5 class="section-title"><i class="bi bi-tags"></i> All Categories</h5>
+
+            {% if categories %}
+            <div class="table-responsive">
+                <table class="table-cyber">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categories %}
+                        <tr>
+                            <td>{{ cat.id }}</td>
+                            <td><strong>{{ cat.name }}</strong></td>
+                            <td>{{ (cat.description or '-')[:50] }}</td>
+                            <td>
+                                {% if cat.is_active %}
+                                <span class="badge-cyber badge-resolved">Active</span>
+                                {% else %}
+                                <span class="badge-cyber badge-closed">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin.manage_categories') }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="action" value="toggle">
+                                    <input type="hidden" name="category_id" value="{{ cat.id }}">
+                                    <button type="submit" class="btn btn-outline-cyber btn-sm" title="Toggle Status">
+                                        <i class="bi {{ 'bi-eye-slash' if cat.is_active else 'bi-eye' }}"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.manage_categories') }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="category_id" value="{{ cat.id }}">
+                                    <button type="submit" class="btn btn-sm" style="border:1px solid var(--danger);color:var(--danger)"
+                                            data-confirm="Delete this category permanently?">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-tags d-block"></i>
+                <h5>No categories</h5>
+                <p>Create the first incident category.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

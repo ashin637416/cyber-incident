@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block auth_content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <span class="auth-icon">🛡️</span>
+            <h2>Welcome Back</h2>
+            <p>Sign in to the Cyber Incident Reporting Portal</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control" id="email" name="email"
+                           placeholder="you@example.com" required autofocus>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" class="form-control" id="password" name="password"
+                           placeholder="••••••••" required minlength="8">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-cyber w-100 mb-3">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+            </button>
+
+            <div class="text-center">
+                <span class="text-cyber-muted">Don't have an account?</span>
+                <a href="{{ url_for('auth.register') }}">Register here</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

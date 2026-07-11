@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="glass-card mb-4">
+    <form method="GET" class="search-bar">
+        <input type="text" class="form-control" name="search" value="{{ search }}"
+               placeholder="Search by name or email...">
+        <select class="form-select auto-filter" name="role">
+            <option value="">All Roles</option>
+            <option value="citizen" {{ 'selected' if role_filter == 'citizen' }}>Citizens</option>
+            <option value="officer" {{ 'selected' if role_filter == 'officer' }}>Officers</option>
+            <option value="admin" {{ 'selected' if role_filter == 'admin' }}>Admins</option>
+        </select>
+        <button type="submit" class="btn btn-cyber btn-sm"><i class="bi bi-search me-1"></i>Search</button>
+    </form>
+</div>
+
+<div class="glass-card">
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table-cyber">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td>{{ u.full_name }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>
+                        <span class="badge-cyber badge-{{ u.role }}">{{ u.role|capitalize }}</span>
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                        <span class="badge-cyber badge-resolved"><i class="bi bi-check-circle me-1"></i>Active</span>
+                        {% else %}
+                        <span class="badge-cyber badge-closed"><i class="bi bi-x-circle me-1"></i>Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ u.created_at.strftime('%d %b %Y') if u.created_at else '' }}</td>
+                    <td>
+                        {% if u.id != current_user.id %}
+                        <form method="POST" action="{{ url_for('admin.toggle_user', user_id=u.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm {{ 'btn-outline-cyber' if u.is_active else 'btn-cyber' }}"
+                                    data-confirm="{{ 'Deactivate' if u.is_active else 'Activate' }} this user?">
+                                <i class="bi {{ 'bi-person-x' if u.is_active else 'bi-person-check' }}"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pagination.total_pages > 1 %}
+    <div class="pagination-cyber">
+        <a class="page-btn {{ 'disabled' if not pagination.has_prev }}"
+           href="?page={{ pagination.prev_page }}&search={{ search }}&role={{ role_filter }}">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        {% for p in pagination.pages %}
+        <a class="page-btn {{ 'active' if p == pagination.page }}"
+           href="?page={{ p }}&search={{ search }}&role={{ role_filter }}">{{ p }}</a>
+        {% endfor %}
+        <a class="page-btn {{ 'disabled' if not pagination.has_next }}"
+           href="?page={{ pagination.next_page }}&search={{ search }}&role={{ role_filter }}">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-people d-block"></i>
+        <h5>No users found</h5>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

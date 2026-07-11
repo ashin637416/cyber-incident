@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Assign Case{% endblock %}
+{% block page_title %}Assign Case {{ incident.case_id }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Case Summary -->
+    <div class="col-lg-4">
+        <div class="glass-card">
+            <h5 class="section-title"><i class="bi bi-info-circle"></i> Case Summary</h5>
+            <div class="mb-3">
+                <small class="text-cyber-muted d-block">Case ID</small>
+                <span class="case-id" style="font-size:1.1rem">{{ incident.case_id }}</span>
+            </div>
+            <div class="mb-3">
+                <small class="text-cyber-muted d-block">Title</small>
+                <strong>{{ incident.title }}</strong>
+            </div>
+            <div class="mb-3">
+                <small class="text-cyber-muted d-block">Type</small>
+                {{ incident.incident_type }}
+            </div>
+            <div class="mb-3">
+                <small class="text-cyber-muted d-block">Priority</small>
+                <span class="badge-cyber badge-{{ incident.priority }}">{{ incident.priority|capitalize }}</span>
+            </div>
+            <div class="mb-3">
+                <small class="text-cyber-muted d-block">Reporter</small>
+                {{ incident.reporter_name }}
+            </div>
+            <div>
+                <small class="text-cyber-muted d-block">Description</small>
+                <p style="font-size:0.85rem">{{ incident.description[:200] }}{{ '...' if incident.description|length > 200 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Officer Selection -->
+    <div class="col-lg-8">
+        <div class="glass-card">
+            <h5 class="section-title"><i class="bi bi-person-plus"></i> Select Officer</h5>
+
+            {% if officers %}
+            <form method="POST" action="{{ url_for('admin.assign_case', incident_id=incident.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="table-responsive mb-4">
+                    <table class="table-cyber">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Officer</th>
+                                <th>Badge</th>
+                                <th>Department</th>
+                                <th>Specialization</th>
+                                <th>Active Cases</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for o in officers %}
+                            <tr>
+                                <td>
+                                    <input class="form-check-input" type="radio" name="officer_id"
+                                           value="{{ o.id }}" id="officer{{ o.id }}" required>
+                                </td>
+                                <td>
+                                    <label for="officer{{ o.id }}" style="cursor:pointer">
+                                        <strong>{{ o.full_name }}</strong>
+                                    </label>
+                                </td>
+                                <td><span class="case-id">{{ o.badge_number }}</span></td>
+                                <td>{{ o.department or '-' }}</td>
+                                <td>{{ o.specialization or '-' }}</td>
+                                <td>
+                                    <span class="badge-cyber {{ 'badge-critical' if o.active_cases > 10 else ('badge-high' if o.active_cases > 5 else 'badge-resolved') }}">
+                                        {{ o.active_cases }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="submit" class="btn btn-cyber">
+                    <i class="bi bi-person-check me-1"></i>Assign Selected Officer
+                </button>
+                <a href="{{ url_for('incident.view_incident', incident_id=incident.id) }}" class="btn btn-outline-cyber ms-2">Cancel</a>
+            </form>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-shield d-block"></i>
+                <h5>No officers available</h5>
+                <p><a href="{{ url_for('admin.manage_officers') }}">Create an officer</a> first.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

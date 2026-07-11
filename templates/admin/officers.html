@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Manage Officers{% endblock %}
+{% block page_title %}Officer Management{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Create Officer Form -->
+    <div class="col-lg-4">
+        <div class="glass-card">
+            <h5 class="section-title"><i class="bi bi-person-plus"></i> Add New Officer</h5>
+            <form method="POST" action="{{ url_for('admin.manage_officers') }}" class="needs-validation" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" class="form-control" name="full_name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-control" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" class="form-control" name="phone">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password *</label>
+                    <input type="password" class="form-control" name="password" required minlength="8">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Badge Number *</label>
+                    <input type="text" class="form-control" name="badge_number" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <input type="text" class="form-control" name="department" placeholder="e.g., Cyber Crime Unit">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Specialization</label>
+                    <input type="text" class="form-control" name="specialization" placeholder="e.g., Financial Fraud">
+                </div>
+                <button type="submit" class="btn btn-cyber w-100">
+                    <i class="bi bi-person-plus me-1"></i>Create Officer
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Officers List -->
+    <div class="col-lg-8">
+        <div class="glass-card">
+            <h5 class="section-title"><i class="bi bi-shield-check"></i> Active Officers</h5>
+
+            {% if officers %}
+            <div class="table-responsive">
+                <table class="table-cyber">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Badge</th>
+                            <th>Department</th>
+                            <th>Specialization</th>
+                            <th>Cases</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for o in officers %}
+                        <tr>
+                            <td>
+                                <strong>{{ o.full_name }}</strong>
+                                <br><small class="text-cyber-muted">{{ o.email }}</small>
+                            </td>
+                            <td><span class="case-id">{{ o.badge_number }}</span></td>
+                            <td>{{ o.department or '-' }}</td>
+                            <td>{{ o.specialization or '-' }}</td>
+                            <td><span class="badge-cyber badge-assigned">{{ o.case_count }}</span></td>
+                            <td>
+                                {% if o.is_active %}
+                                <span class="badge-cyber badge-resolved">Active</span>
+                                {% else %}
+                                <span class="badge-cyber badge-closed">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-shield d-block"></i>
+                <h5>No officers yet</h5>
+                <p>Create the first officer using the form.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

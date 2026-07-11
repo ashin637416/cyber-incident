@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Incidents{% endblock %}
+{% block page_title %}Incident Reports{% endblock %}
+
+{% block content %}
+<!-- Search & Filters -->
+<div class="glass-card mb-4">
+    <form method="GET" class="search-bar">
+        <input type="text" class="form-control" name="search" value="{{ search }}"
+               placeholder="Search by Case ID, title, or description...">
+        <select class="form-select auto-filter" name="status">
+            <option value="">All Statuses</option>
+            <option value="Pending" {{ 'selected' if status == 'Pending' }}>Pending</option>
+            <option value="Assigned" {{ 'selected' if status == 'Assigned' }}>Assigned</option>
+            <option value="Under Investigation" {{ 'selected' if status == 'Under Investigation' }}>Under Investigation</option>
+            <option value="Resolved" {{ 'selected' if status == 'Resolved' }}>Resolved</option>
+            <option value="Closed" {{ 'selected' if status == 'Closed' }}>Closed</option>
+        </select>
+        <select class="form-select auto-filter" name="priority">
+            <option value="">All Priorities</option>
+            <option value="low" {{ 'selected' if priority == 'low' }}>Low</option>
+            <option value="medium" {{ 'selected' if priority == 'medium' }}>Medium</option>
+            <option value="high" {{ 'selected' if priority == 'high' }}>High</option>
+            <option value="critical" {{ 'selected' if priority == 'critical' }}>Critical</option>
+        </select>
+        <select class="form-select auto-filter" name="sort_by">
+            <option value="created_at" {{ 'selected' if sort_by == 'created_at' }}>Sort by Date</option>
+            <option value="priority" {{ 'selected' if sort_by == 'priority' }}>Sort by Priority</option>
+            <option value="status" {{ 'selected' if sort_by == 'status' }}>Sort by Status</option>
+            <option value="case_id" {{ 'selected' if sort_by == 'case_id' }}>Sort by Case ID</option>
+        </select>
+        <input type="hidden" name="sort_dir" value="{{ sort_dir }}">
+        <button type="submit" class="btn btn-cyber btn-sm">
+            <i class="bi bi-search me-1"></i>Search
+        </button>
+    </form>
+</div>
+
+<!-- Incidents Table -->
+<div class="glass-card">
+    {% if incidents %}
+    <div class="table-responsive">
+        <table class="table-cyber">
+            <thead>
+                <tr>
+                    <th>Case ID</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Date</th>
+                    {% if current_user.role != 'citizen' %}
+                    <th>Reporter</th>
+                    {% endif %}
+                    <th>Officer</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inc in incidents %}
+                <tr>
+                    <td><span class="case-id">{{ inc.case_id }}</span></td>
+                    <td>{{ inc.title[:40] }}{{ '...' if inc.title|length > 40 }}</td>
+                    <td>{{ inc.incident_type }}</td>
+                    <td>
+                        {% set sc = get_status_color(inc.status) %}
+                        <span class="badge-cyber badge-{{ inc.status|lower|replace(' ', '-') }}">
+                            {{ inc.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge-cyber badge-{{ inc.priority }}">
+                            {{ inc.priority|capitalize }}
+                        </span>
+                    </td>
+                    <td>{{ inc.created_at.strftime('%d %b %Y') if inc.created_at else '' }}</td>
+                    {% if current_user.role != 'citizen' %}
+                    <td>{{ inc.reporter_name or '-' }}</td>
+                    {% endif %}
+                    <td>{{ inc.officer_name or 'Unassigned' }}</td>
+                    <td>
+                        <a href="{{ url_for('incident.view_incident', incident_id=inc.id) }}"
+                           class="btn btn-outline-cyber btn-sm">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        {% if current_user.role == 'admin' and inc.status == 'Pending' %}
+                        <a href="{{ url_for('admin.assign_case', incident_id=inc.id) }}"
+                           class="btn btn-cyber btn-sm ms-1">
+                            <i class="bi bi-person-plus"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.total_pages > 1 %}
+    <div class="pagination-cyber">
+        <a class="page-btn {{ 'disabled' if not pagination.has_prev }}"
+           href="?page={{ pagination.prev_page }}&search={{ search }}&status={{ status }}&priority={{ priority }}&sort_by={{ sort_by }}&sort_dir={{ sort_dir }}">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        {% for p in pagination.pages %}
+        <a class="page-btn {{ 'active' if p == pagination.page }}"
+           href="?page={{ p }}&search={{ search }}&status={{ status }}&priority={{ priority }}&sort_by={{ sort_by }}&sort_dir={{ sort_dir }}">
+            {{ p }}
+        </a>
+        {% endfor %}
+        <a class="page-btn {{ 'disabled' if not pagination.has_next }}"
+           href="?page={{ pagination.next_page }}&search={{ search }}&status={{ status }}&priority={{ priority }}&sort_by={{ sort_by }}&sort_dir={{ sort_dir }}">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-folder2-open d-block"></i>
+        <h5>No incidents found</h5>
+        <p>{% if current_user.role == 'citizen' %}You haven't reported any incidents yet.{% else %}No matching incidents.{% endif %}</p>
+        {% if current_user.role == 'citizen' %}
+        <a href="{{ url_for('incident.new_incident') }}" class="btn btn-cyber mt-3">
+            <i class="bi bi-plus-circle me-1"></i>Report an Incident
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

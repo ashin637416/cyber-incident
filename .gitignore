@@ -1,0 +1,23 @@
+# Virtual environments
+venv/
+.venv/
+**/venv/
+**/.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Local databases
+*.db
+
+# Large media or documents (avoid pushing 40MB+ PDF to repo)
+Report model.pdf
+
+# IDEs/Environments
+.env
+.vscode/
+.idea/
+
+# User uploads
+uploads/
