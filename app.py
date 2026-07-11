@@ -18,6 +18,11 @@ def create_app():
     # ── CSRF Protection ────────────────────────────────────────
     csrf = CSRFProtect(app)
 
+    # ── Proxy Fix for Reverse Proxies (Render, Heroku) ──────────
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+
     # ── Flask-Login ────────────────────────────────────────────
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
