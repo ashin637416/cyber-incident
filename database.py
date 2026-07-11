@@ -81,6 +81,14 @@ def init_db():
         finally:
             conn.close()
 
+        # Auto-seed the database with default admin, officer, and categories
+        try:
+            from seed import seed
+            seed()
+        except Exception as se:
+            print(f"[DB] [WARNING] Could not auto-seed database: {se}")
+
+
 
 def fetch_one(query, params=None):
     """Execute a query and return a single row as a dictionary."""
