@@ -53,18 +53,13 @@ def seed():
 
     # ── Incident Categories ────────────────────────────────────
     categories = [
-        ('Phishing', 'Fraudulent attempts to obtain sensitive information via email, SMS, or fake websites.'),
-        ('Ransomware', 'Malicious software that encrypts files and demands payment for decryption.'),
-        ('Identity Theft', 'Unauthorized use of personal information for fraudulent purposes.'),
-        ('Online Fraud', 'Financial scams conducted through digital channels.'),
-        ('Cyberbullying', 'Harassment, threats, or intimidation through digital platforms.'),
-        ('Data Breach', 'Unauthorized access to confidential or protected data.'),
-        ('Hacking', 'Unauthorized intrusion into computer systems or networks.'),
-        ('Malware', 'Infection by viruses, trojans, worms, or spyware.'),
-        ('Social Engineering', 'Manipulation tactics to trick people into revealing information.'),
-        ('Denial of Service', 'Attacks that disrupt the availability of online services.'),
-        ('Child Exploitation', 'Online abuse or exploitation of minors.'),
-        ('Intellectual Property Theft', 'Unauthorized copying or distribution of copyrighted content.'),
+        ('Financial & Payment Fraud', 'Scams, fake transactions, unauthorized banking/card usage, and financial extortion.'),
+        ('System & Network Intrusions', 'Unauthorized system access, malware infections, ransomware attacks, and network disruptions.'),
+        ('Phishing & Social Engineering', 'Deceptive emails, fake websites, SMS scams (smishing), and credential harvesting.'),
+        ('Data Breach & Privacy Leak', 'Unauthorized access, exposure, or exfiltration of sensitive personal or corporate data.'),
+        ('Cyber Harassment & Digital Abuse', 'Cyberbullying, online stalking, harassment, extortion, and digital threats.'),
+        ('Intellectual Property & Piracy', 'Copyright theft, trade secret leaks, software piracy, and digital asset theft.'),
+        ('Infrastructure & Web Security', 'Website defacement, DNS hijacking, API abuse, and botnet attacks.'),
     ]
 
     for name, desc in categories:
